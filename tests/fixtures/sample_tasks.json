@@ -1,0 +1,29 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "task": "Research Celery architecture",
+      "depends_on": []
+    },
+    {
+      "id": 2,
+      "task": "Search for known Celery failure modes",
+      "depends_on": []
+    },
+    {
+      "id": 3,
+      "task": "Analyze distributed system logs for intermittent failures",
+      "depends_on": [1, 2]
+    },
+    {
+      "id": 4,
+      "task": "Write a prototype fix using exponential backoff and circuit breakers",
+      "depends_on": [3]
+    },
+    {
+      "id": 5,
+      "task": "Synthesize a final report with all findings and the prototype",
+      "depends_on": [3, 4]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "search": [
+    {
+      "title": "Celery Distributed Task Queue",
+      "url": "https://docs.celeryq.dev/en/stable/",
+      "snippet": "Celery is a simple, flexible, and reliable distributed system to process vast amounts of messages..."
+    },
+    {
+      "title": "Common Celery pitfalls in production",
+      "url": "https://example.com/celery-pitfalls",
+      "snippet": "Top failure modes include broker disconnects, prefetch misconfiguration, and result backend timeouts."
+    }
+  ],
+  "python_executor": {
+    "stdout": "120\n",
+    "stderr": "",
+    "return_code": 0,
+    "success": true
+  },
+  "file_read": "def hello():\n    return 'hi'\n",
+  "api_call": {
+    "status_code": 200,
+    "body": {"ok": true}
+  }
+}
