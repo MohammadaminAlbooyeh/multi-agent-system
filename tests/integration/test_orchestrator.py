@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -40,7 +40,7 @@ async def test_orchestrator_runs_end_to_end():
 
     factory = _stub_llm_factory([plan_payload, research_payload, exec_payload, critic_payload, synth_payload])
 
-    with patch("mares.llm.llm_factory.LLMFactory", return_value=factory):
+    with patch("mares.agents.base_agent.LLMFactory", return_value=factory):
         orch = Orchestrator()
         report = await orch.run("Investigate X and implement Y")
 

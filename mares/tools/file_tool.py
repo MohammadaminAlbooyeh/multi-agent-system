@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from mares.tools.tool_registry import default_registry
 from mares.utils.exceptions import ToolError
 from mares.utils.logger import get_logger
 
@@ -66,5 +67,13 @@ class FileTool:
             return await self.list_files(**kwargs)
         raise ToolError(f"Unknown file action: {action!r}")
 
+
+# Auto-register on import.
+default_registry.register(
+    FileTool.name,
+    FileTool().__call__,
+    description=FileTool.description,
+    schema={"action": "read|write|list", "path": "string", "content": "string"},
+)
 
 __all__ = ["FileTool"]

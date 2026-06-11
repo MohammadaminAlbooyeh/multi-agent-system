@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -31,7 +31,6 @@ async def test_end_to_end_with_python_executor():
             ]
         }
     )
-    research_fallback = json.dumps({"summary": "factorial math", "facts": [], "sources": []})
     exec_code = json.dumps(
         {"language": "python", "code": "import math; print(math.factorial(5))"}
     )
@@ -40,7 +39,7 @@ async def test_end_to_end_with_python_executor():
 
     factory = _make_factory([plan, exec_code, critic, synth])
 
-    with patch("mares.llm.llm_factory.LLMFactory", return_value=factory):
+    with patch("mares.agents.base_agent.LLMFactory", return_value=factory):
         orch = Orchestrator()
         report = await orch.run("Compute 5!")
 

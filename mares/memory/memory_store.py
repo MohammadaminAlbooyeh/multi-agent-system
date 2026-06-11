@@ -55,6 +55,12 @@ class MemoryStore:
         else:
             self._memory.pop(key, None)
 
+    async def clear(self) -> None:
+        if self._redis is not None:
+            await self._redis.flushdb()
+        else:
+            self._memory.clear()
+
     async def _raw_get(self, key: str) -> str | None:
         if self._redis is not None:
             return await self._redis.get(key)

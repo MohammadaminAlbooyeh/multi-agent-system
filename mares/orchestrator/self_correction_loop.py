@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
 
 from mares.agents.critic_agent import CriticAgent
 from mares.models.agent_output import AgentOutput
@@ -42,8 +41,7 @@ class SelfCorrectionLoop:
                 logger.info("self_correction.passed", attempt=attempt)
                 return outputs
 
-            failed_ids = {issue.get("sub_task_id") for issue in report.issues}
-            failed_ids.discard(None)
+            failed_ids = {issue.sub_task_id for issue in report.issues}
             logger.warning(
                 "self_correction.retry",
                 attempt=attempt,

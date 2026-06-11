@@ -5,8 +5,9 @@ from __future__ import annotations
 import abc
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
+from mares.llm.cost_controller import CostController
 from mares.llm.llm_factory import LLMFactory
 from mares.memory.agent_memory import AgentMemory
 from mares.utils.logger import get_logger
@@ -29,11 +30,13 @@ class BaseAgent(abc.ABC):
         self,
         llm_factory: LLMFactory | None = None,
         memory: AgentMemory | None = None,
+        cost_controller: CostController | None = None,
         system_prompt: str | None = None,
         **kwargs: Any,
     ) -> None:
         self.llm_factory = llm_factory or LLMFactory()
         self.memory = memory or AgentMemory(agent_name=self.name)
+        self.cost_controller = cost_controller
         self.system_prompt = system_prompt or self.default_system_prompt()
         self.kwargs = kwargs
         logger.debug("agent.initialised", agent=self.name)
@@ -45,6 +48,18 @@ class BaseAgent(abc.ABC):
         """Execute the agent's primary behaviour."""
 
     # ----- Helpers ---------------------------------------------------------
+
+    async def _generate(
+        self,
+        system: str,
+        user: str,
+        **kwargs: Any,
+    ) -> str:
+        """Generate via LLM and track cost if a controller is configured."""
+        raw = await self.llm_factory.generate(system=system, user=user, **kwargs)
+        if self.cost_controller is not None:
+            self.cost_controller.estimate_and_record(self.name, system + "\n" + user, raw)
+        return raw
 
     def default_system_prompt(self) -> str:
         return (

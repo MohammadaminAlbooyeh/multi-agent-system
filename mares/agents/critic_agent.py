@@ -56,7 +56,7 @@ class CriticAgent(BaseAgent):
         self.remember("user", user_msg)
         logger.info("critic.start", outputs=len(input_data))
 
-        raw = await self.llm_factory.generate(
+        raw = await self._generate(
             system=self.system_prompt,
             user=user_msg,
         )

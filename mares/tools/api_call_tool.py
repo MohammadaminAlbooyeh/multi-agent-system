@@ -6,6 +6,7 @@ from typing import Any
 
 import httpx
 
+from mares.tools.tool_registry import default_registry
 from mares.utils.exceptions import ToolError
 from mares.utils.logger import get_logger
 from mares.utils.retry import async_retry
@@ -69,5 +70,13 @@ class APICallTool:
                 "body": body,
             }
 
+
+# Auto-register on import.
+default_registry.register(
+    APICallTool.name,
+    APICallTool().__call__,
+    description=APICallTool.description,
+    schema={"method": "GET|POST|PUT|PATCH|DELETE", "url": "string"},
+)
 
 __all__ = ["APICallTool"]

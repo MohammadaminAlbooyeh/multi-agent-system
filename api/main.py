@@ -24,8 +24,9 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.settings = settings
     app.state.event_bus = EventBus()
-    app.state.orchestrator = Orchestrator()
+    app.state.orchestrator = Orchestrator(event_bus=app.state.event_bus)
     app.state.tasks: dict[str, asyncio.Task] = {}
+    app.state.results: dict[str, dict] = {}
     logger.info("api.startup", host=settings.api_host, port=settings.api_port)
     try:
         yield

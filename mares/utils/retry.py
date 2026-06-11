@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import functools
 import random
+import time
 from collections.abc import Callable
 from typing import Any, TypeVar
 
@@ -44,7 +45,7 @@ def retry(
                         error=str(exc),
                         sleep=delay,
                     )
-                    asyncio.run_coroutine_threadsafe(asyncio.sleep(delay), asyncio.get_event_loop())
+                    time.sleep(delay)
 
         return wrapper
 

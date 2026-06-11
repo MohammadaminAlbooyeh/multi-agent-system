@@ -9,8 +9,9 @@ from mares.utils.exceptions import (
     PlanningError,
     ResearchError,
     ToolError,
+    ValidationError,
 )
-from mares.utils.json_utils import safe_json_loads
+from mares.utils.json_utils import JSONDecodeError, safe_json_loads
 from mares.utils.logger import get_logger
 from mares.utils.retry import async_retry, retry
 from mares.utils.timeout import async_timeout
@@ -34,4 +35,6 @@ __all__ = [
     "ResearchError",
     "ToolError",
     "CriticError",
+    "ValidationError",
+    "JSONDecodeError",
 ]

@@ -71,6 +71,11 @@ class CostController:
                 f"Agent '{agent}' exceeded its budget ({used} > {budget})."
             )
 
+    def estimate_and_record(self, agent: str, input_text: str, output_text: str) -> None:
+        in_tokens = self.estimate(agent, input_text)
+        out_tokens = self.estimate(agent, output_text)
+        self.record(agent, in_tokens, out_tokens)
+
     def snapshot(self) -> dict[str, int]:
         return {
             "global_used": self._global_used,

@@ -47,7 +47,7 @@ class SynthesizerAgent(BaseAgent):
         self.remember("user", user_msg)
         logger.info("synthesizer.start", outputs=len(input_data))
 
-        body = await self.llm_factory.generate(
+        body = await self._generate(
             system=self.system_prompt,
             user=user_msg,
         )

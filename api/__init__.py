@@ -1,3 +1,1 @@
 """MARES FastAPI application package."""
-
-__all__ = ["main"]

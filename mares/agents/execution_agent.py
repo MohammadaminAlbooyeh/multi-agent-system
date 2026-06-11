@@ -48,7 +48,7 @@ class ExecutionAgent(BaseAgent):
         self.remember("user", input_data.task)
         logger.info("execution.start", sub_task_id=input_data.id)
 
-        raw = await self.llm_factory.generate(
+        raw = await self._generate(
             system=self.system_prompt,
             user=f"Write code that accomplishes: {input_data.task}",
         )

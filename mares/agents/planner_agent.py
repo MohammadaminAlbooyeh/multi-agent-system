@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import Any, ClassVar
 
 from pydantic import ValidationError
@@ -11,7 +10,7 @@ from mares.agents.base_agent import BaseAgent
 from mares.models.sub_task import SubTask
 from mares.models.task import Task
 from mares.utils.exceptions import PlanningError
-from mares.utils.json_utils import safe_json_loads
+from mares.utils.json_utils import JSONDecodeError, safe_json_loads
 from mares.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -55,7 +54,7 @@ class PlannerAgent(BaseAgent):
         self.remember("user", input_data)
         logger.info("planner.start", task_length=len(input_data))
 
-        raw = await self.llm_factory.generate(
+        raw = await self._generate(
             system=self.system_prompt,
             user=input_data,
         )
@@ -71,7 +70,7 @@ class PlannerAgent(BaseAgent):
                 )
                 for item in payload.get("tasks", [])
             ]
-        except (ValueError, KeyError, TypeError, ValidationError) as exc:
+        except (ValueError, KeyError, TypeError, ValidationError, JSONDecodeError) as exc:
             raise PlanningError(f"Planner produced invalid JSON: {exc}") from exc
 
         task_graph = Task(description=input_data, sub_tasks=tasks)

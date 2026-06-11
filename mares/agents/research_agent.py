@@ -49,7 +49,7 @@ class ResearchAgent(BaseAgent):
         self.remember("user", user_msg)
         logger.info("research.start", sub_task_id=input_data.id)
 
-        raw = await self.llm_factory.generate(
+        raw = await self._generate(
             system=self.system_prompt,
             user=user_msg,
         )

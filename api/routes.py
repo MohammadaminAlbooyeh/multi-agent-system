@@ -55,11 +55,13 @@ async def run(request: RunRequest, background: BackgroundTasks, req: Request) ->
 
     async def _runner() -> None:
         try:
-            report = await orchestrator.run(request.task)
+            report_obj = await orchestrator.run(request.task)
+            report = report_obj.model_dump()
+            req.app.state.results[task_id] = report
             await event_bus.emit(
                 "task.completed",
                 task_id=task_id,
-                report=report.model_dump(),
+                report=report,
             )
         except Exception as exc:  # noqa: BLE001
             logger.error("api.run.failed", task_id=task_id, error=str(exc))
@@ -77,7 +79,12 @@ async def status(task_id: str, req: Request) -> StatusResponse:
     if task.done():
         if task.exception():
             return StatusResponse(task_id=task_id, status="failed", error=str(task.exception()))
-        return StatusResponse(task_id=task_id, status="completed")
+        report = req.app.state.results.get(task_id)
+        return StatusResponse(
+            task_id=task_id,
+            status="completed",
+            report=report,
+        )
     return StatusResponse(task_id=task_id, status="running")
 
 

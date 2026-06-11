@@ -7,6 +7,7 @@ import os
 import tempfile
 from typing import Any
 
+from mares.tools.tool_registry import default_registry
 from mares.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -84,5 +85,13 @@ class PythonExecutorTool:
     async def __call__(self, code: str, timeout: float | None = None, **kwargs: Any) -> dict[str, Any]:
         return await self.run(code=code, timeout=timeout, **kwargs)
 
+
+# Auto-register on import.
+default_registry.register(
+    PythonExecutorTool.name,
+    PythonExecutorTool().__call__,
+    description=PythonExecutorTool.description,
+    schema={"code": "string", "timeout": "number"},
+)
 
 __all__ = ["PythonExecutorTool"]
