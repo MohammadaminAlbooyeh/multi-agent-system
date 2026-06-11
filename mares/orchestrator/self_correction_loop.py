@@ -41,7 +41,7 @@ class SelfCorrectionLoop:
                 logger.info("self_correction.passed", attempt=attempt)
                 return outputs
 
-            failed_ids = {issue.sub_task_id for issue in report.issues}
+            failed_ids = report.failed_subtask_ids()
             logger.warning(
                 "self_correction.retry",
                 attempt=attempt,

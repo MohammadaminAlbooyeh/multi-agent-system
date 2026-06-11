@@ -47,7 +47,7 @@ class Orchestrator:
         max_retries: int = 3,
     ) -> None:
         cost_controller = cost_controller or CostController.from_env()
-        cc_kwargs = {"cost_controller": cost_controller}
+        cc_kwargs: dict[str, Any] = {"cost_controller": cost_controller}
         self.planner = planner or PlannerAgent(**cc_kwargs)
         self.research = research or ResearchAgent(**cc_kwargs)
         self.execution = execution or ExecutionAgent(**cc_kwargs)

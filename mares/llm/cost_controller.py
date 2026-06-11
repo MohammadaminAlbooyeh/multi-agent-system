@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from typing import Any
 
 from mares.utils.exceptions import MARESError
 from mares.utils.logger import get_logger
@@ -76,7 +77,7 @@ class CostController:
         out_tokens = self.estimate(agent, output_text)
         self.record(agent, in_tokens, out_tokens)
 
-    def snapshot(self) -> dict[str, int]:
+    def snapshot(self) -> dict[str, Any]:
         return {
             "global_used": self._global_used,
             "per_agent_used": dict(self._per_agent_used),
