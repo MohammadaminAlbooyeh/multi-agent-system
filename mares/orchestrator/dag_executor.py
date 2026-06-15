@@ -8,6 +8,7 @@ from mares.agents.execution_agent import ExecutionAgent
 from mares.agents.research_agent import ResearchAgent
 from mares.graph.dag import DAG
 from mares.graph.dependency_resolver import DependencyResolver
+from mares.graph.task_node import TaskNode
 from mares.models.agent_output import AgentOutput
 from mares.models.sub_task import SubTask
 from mares.models.task import Task
@@ -23,7 +24,8 @@ class DAGExecutor:
     Steps:
         1. Build a :class:`DAG` from the planner output.
         2. Topologically sort and group by execution "wave" (level).
-        3. Run each wave in parallel via :class:`ParallelRunner`.
+        3. Run each wave in parallel via :class:`ParallelRunner`, tracking
+           execution state with :class:`TaskNode`.
     """
 
     def __init__(
@@ -41,12 +43,27 @@ class DAGExecutor:
         resolver = DependencyResolver(dag)
         waves = resolver.execution_waves()
 
+        # Build TaskNode index for runtime state tracking
+        self._task_nodes: dict[int, TaskNode] = {
+            st.id: TaskNode(sub_task=st)
+            for st in task.sub_tasks
+        }
+
         logger.info("dag_executor.start", waves=len(waves), nodes=dag.node_count())
 
         all_outputs: list[AgentOutput] = []
         for level, wave in enumerate(waves):
             logger.info("dag_executor.wave", level=level, size=len(wave))
+            # Mark tasks as running
+            for st in wave:
+                if st.id in self._task_nodes:
+                    self._task_nodes[st.id].mark_running()
             outputs = await self.runner.run_wave(wave, self._dispatch_subtask)
+            # Mark results
+            for out in outputs:
+                if out.sub_task_id in self._task_nodes:
+                    node = self._task_nodes[out.sub_task_id]
+                    node.mark_done(out)
             all_outputs.extend(outputs)
 
         logger.info("dag_executor.done", outputs=len(all_outputs))

@@ -30,7 +30,7 @@ class MemoryStore:
                 self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
                 logger.info("memory_store.redis_connected", url=self.redis_url)
             except Exception as exc:  # noqa: BLE001
-                logger.warning("memory_store.redis_unavailable", error=str(exc))
+                logger.warning("memory_store.redis_unavailable_falling_back_to_memory", error=str(exc))
                 self._redis = None
 
     async def get(self, key: str) -> Any | None:

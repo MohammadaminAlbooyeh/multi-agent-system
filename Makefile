@@ -4,8 +4,9 @@
 # =============================================================================
 
 .PHONY: help install lint format test test-unit test-integration test-cov \
-        run-api run-example run-notebooks clean docker-build docker-up \
-        docker-down docker-logs pre-commit
+        run-api run-example run-example-research run-example-data-pipeline \
+        run-example-algorithm run-example-celery run-notebooks clean \
+        docker-build docker-up docker-down docker-logs pre-commit
 
 PYTHON ?= python3
 PIP    ?= $(PYTHON) -m pip
@@ -56,8 +57,29 @@ run-api:  ## Start FastAPI server
 run-example:  ## Run basic example
 	$(PYTHON) -m examples.run_basic_task
 
+run-example-research:  ## Run research deep-dive example
+	$(PYTHON) -m examples.run_research_task
+
+run-example-data-pipeline:  ## Run data pipeline example
+	$(PYTHON) -m examples.run_data_pipeline_task
+
+run-example-algorithm:  ## Run algorithm implementation example
+	$(PYTHON) -m examples.run_algorithm_task
+
+run-example-celery:  ## Run Celery failure analysis example
+	$(PYTHON) -m examples.run_celery_analysis
+
 run-notebooks:  ## Launch Jupyter
 	jupyter notebook notebooks/
+
+db-upgrade:  ## Run Alembic migrations (upgrade to latest)
+	alembic upgrade head
+
+db-downgrade:  ## Rollback Alembic migration
+	alembic downgrade -1
+
+db-migrate:  ## Auto-generate a new Alembic migration
+	alembic revision --autogenerate -m "$(message)"
 
 # ---------------------------------------------------------------------------
 # Docker

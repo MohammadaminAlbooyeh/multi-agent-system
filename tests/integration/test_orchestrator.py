@@ -36,9 +36,10 @@ async def test_orchestrator_runs_end_to_end():
     )
     exec_payload = json.dumps({"language": "python", "code": "print('ok')"})
     critic_payload = json.dumps({"passed": True, "issues": [], "summary": "ok"})
+    eval_payload = json.dumps({"score": 90, "accuracy": 85, "completeness": 95, "notes": "Solid"})
     synth_payload = "# Final\n\nAll good."
 
-    factory = _stub_llm_factory([plan_payload, research_payload, exec_payload, critic_payload, synth_payload])
+    factory = _stub_llm_factory([plan_payload, research_payload, exec_payload, critic_payload, eval_payload, eval_payload, synth_payload])
 
     with patch("mares.agents.base_agent.LLMFactory", return_value=factory):
         orch = Orchestrator()

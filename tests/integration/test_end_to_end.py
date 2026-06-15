@@ -36,8 +36,9 @@ async def test_end_to_end_with_python_executor():
     )
     critic = json.dumps({"passed": True, "issues": [], "summary": "ok"})
     synth = "# Report\n\n120"
+    evaluator = json.dumps({"score": 95, "accuracy": 90, "completeness": 100, "notes": "Good"})
 
-    factory = _make_factory([plan, exec_code, critic, synth])
+    factory = _make_factory([plan, exec_code, critic, evaluator, synth])
 
     with patch("mares.agents.base_agent.LLMFactory", return_value=factory):
         orch = Orchestrator()
