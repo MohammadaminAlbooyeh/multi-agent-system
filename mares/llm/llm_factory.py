@@ -25,8 +25,9 @@ class LLMFactory:
     SUPPORTED = {"openai", "anthropic", "groq", "ollama", "local"}
 
     def __init__(self, default_provider: str | None = None, default_model: str | None = None) -> None:
-        self.default_provider = (default_provider or os.getenv("DEFAULT_LLM_PROVIDER", "openai")).lower()
-        self.default_model = default_model or os.getenv("DEFAULT_LLM_MODEL", "gpt-4o-mini")
+        provider_str = default_provider if default_provider is not None else (os.getenv("DEFAULT_LLM_PROVIDER") or "openai")
+        self.default_provider = provider_str.lower()
+        self.default_model = default_model if default_model is not None else (os.getenv("DEFAULT_LLM_MODEL") or "gpt-4o-mini")
         if self.default_provider not in self.SUPPORTED:
             raise ValueError(
                 f"Unsupported LLM provider: {self.default_provider}. "
@@ -35,8 +36,10 @@ class LLMFactory:
         self._cache: dict[str, Any] = {}
 
     def get(self, provider: str | None = None, model: str | None = None) -> Any:
-        provider = (provider or self.default_provider).lower()
-        model = model or self.default_model
+        provider_str = provider if provider is not None else self.default_provider
+        provider = provider_str.lower()
+        model_str = model if model is not None else self.default_model
+        model = model_str
         key = f"{provider}:{model}"
         if key in self._cache:
             return self._cache[key]

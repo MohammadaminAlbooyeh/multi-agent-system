@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from mares.graph.dag import DAG
 from mares.graph.task_node import TaskNode
 from mares.models.sub_task import SubTask
@@ -30,7 +32,7 @@ class DependencyResolver:
         out: dict[int, TaskNode] = {}
         for node_id in self.dag.nodes():
             sub_task: SubTask = self.dag.get(node_id)
-            out[node_id] = TaskNode(sub_task=sub_task)
+            out[cast(int, node_id)] = TaskNode(sub_task=sub_task)
         return out
 
     def validate(self) -> None:

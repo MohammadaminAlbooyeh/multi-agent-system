@@ -26,7 +26,8 @@ class LocalLLM:
         timeout: float = 60.0,
     ) -> None:
         self.model = model
-        self.base_url = (base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")).rstrip("/")
+        base_url_str = base_url if base_url is not None else (os.getenv("OLLAMA_BASE_URL") or "http://localhost:11434")
+        self.base_url = base_url_str.rstrip("/")
         self.timeout = timeout
 
     async def generate(

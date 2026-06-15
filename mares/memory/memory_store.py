@@ -19,7 +19,8 @@ class MemoryStore:
     """
 
     def __init__(self, backend: str | None = None, redis_url: str | None = None) -> None:
-        self.backend = (backend or os.getenv("MARES_MEMORY_BACKEND", "memory")).lower()
+        backend_str = backend if backend is not None else (os.getenv("MARES_MEMORY_BACKEND") or "memory")
+        self.backend = backend_str.lower()
         self.redis_url = redis_url or os.getenv("REDIS_URL")
         self._memory: dict[str, str] = {}
         self._redis = None

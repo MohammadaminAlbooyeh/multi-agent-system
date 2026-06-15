@@ -32,7 +32,7 @@ class EventBus:
             self._handlers[event] = [h for h in self._handlers[event] if h is not handler]
 
     async def emit(self, event: str, **payload: Any) -> None:
-        logger.debug("event_bus.emit", event=event, keys=list(payload.keys()))
+        logger.debug("event_bus.emit", event_type=event, keys=list(payload.keys()))
         handlers = list(self._handlers.get(event, []))
         results = [h(payload) for h in handlers]
         for r in results:
