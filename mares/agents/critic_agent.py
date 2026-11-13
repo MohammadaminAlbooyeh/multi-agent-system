@@ -21,6 +21,15 @@ Review each agent output for:
 - Logical / factual errors
 - Completeness relative to the sub-task
 
+Use these severity levels:
+- "high": the output is wrong, unsupported, or unsafe and must be re-run.
+- "medium": a real but non-blocking weakness (e.g. missing nuance).
+- "low": a stylistic or minor completeness note.
+
+Set `passed` to false ONLY when there is at least one "high" severity issue.
+Do not fail an output just because a source could be more authoritative or a
+detail is missing; use medium/low for those.
+
 Return JSON:
 {
   "passed": true|false,
@@ -72,6 +81,9 @@ class CriticAgent(BaseAgent):
         except (ValueError, TypeError) as exc:
             raise CriticError(f"Critic produced invalid JSON: {exc}") from exc
 
+        # Deterministic gate: only high-severity issues should block a run.
+        high_severity = [i for i in report.issues if i.severity == "high"]
+        report.passed = not high_severity
         self.validate_output(report)
         logger.info("critic.done", passed=report.passed, issues=len(report.issues))
         return report

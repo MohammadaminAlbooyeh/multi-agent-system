@@ -3,16 +3,26 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from logging.config import fileConfig
 
 from alembic import context
+from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from mares.db.models import Base
 
+load_dotenv(override=False)
+
 config = context.config
+
+# Prefer DATABASE_URL from the environment (or .env) over alembic.ini.
+_database_url = os.getenv("DATABASE_URL")
+if _database_url:
+    config.set_main_option("sqlalchemy.url", _database_url.replace("%", "%%"))
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

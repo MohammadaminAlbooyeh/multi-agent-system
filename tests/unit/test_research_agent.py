@@ -41,3 +41,38 @@ async def test_research_rejects_wrong_input_type(mock_llm_factory):
     agent = ResearchAgent(llm_factory=mock_llm_factory)
     with pytest.raises(ResearchError):
         await agent.run("not a sub-task")  # type: ignore[arg-type]
+
+
+@pytest.mark.asyncio
+async def test_research_injects_search_results(mock_llm_factory):
+    mock_llm_factory.generate.return_value = json.dumps(
+        {
+            "summary": "Celery uses a broker.",
+            "facts": ["Broker dispatches tasks"],
+            "sources": [],
+        }
+    )
+    executor = MagicMock()
+    executor.execute = AsyncMock(
+        return_value=[
+            {
+                "title": "Celery docs",
+                "url": "https://docs.celeryq.dev",
+                "snippet": "Distributed task queue.",
+            }
+        ]
+    )
+    agent = ResearchAgent(
+        llm_factory=mock_llm_factory,
+        tool_executor=executor,
+        enable_search=True,
+    )
+
+    finding = await agent.run(SubTask(id=2, task="How does Celery work?"))
+
+    executor.execute.assert_awaited_once()
+    call_kwargs = executor.execute.await_args.kwargs
+    assert call_kwargs["query"] == "How does Celery work?"
+    prompt = mock_llm_factory.generate.await_args.kwargs["user"]
+    assert "https://docs.celeryq.dev" in prompt
+    assert "https://docs.celeryq.dev" in finding.sources

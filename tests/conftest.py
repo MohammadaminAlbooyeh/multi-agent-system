@@ -17,6 +17,11 @@ os.environ.setdefault("OPENAI_API_KEY", "test-key")
 os.environ.setdefault("ANTHROPIC_API_KEY", "test-key")
 os.environ.setdefault("GROQ_API_KEY", "test-key")
 
+# Keep tests hermetic: never hit the network or external services.
+os.environ.setdefault("RESEARCH_ENABLE_SEARCH", "false")
+os.environ["DATABASE_URL"] = ""
+os.environ["MARES_MEMORY_BACKEND"] = "memory"
+
 
 @pytest.fixture
 def sample_task_string() -> str:

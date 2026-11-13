@@ -34,6 +34,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN groupadd --system --gid 1001 mares \
     && useradd --system --uid 1001 --gid mares mares
 
+# curl is used by the container + compose healthchecks.
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copy installed deps from builder
@@ -43,6 +47,9 @@ COPY --from=builder /usr/local/bin /usr/local/bin
 # Copy application
 COPY --chown=mares:mares . /app
 
+# Ensure the entrypoint is executable (Git may not preserve the bit on all systems).
+RUN chmod +x /app/scripts/docker-entrypoint.sh
+
 USER mares
 
 EXPOSE 8000
@@ -50,4 +57,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

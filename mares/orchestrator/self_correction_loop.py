@@ -42,6 +42,9 @@ class SelfCorrectionLoop:
                 return outputs
 
             failed_ids = report.failed_subtask_ids()
+            if not failed_ids:
+                logger.warning("self_correction.no_actionable_failures")
+                break
             logger.warning(
                 "self_correction.retry",
                 attempt=attempt,

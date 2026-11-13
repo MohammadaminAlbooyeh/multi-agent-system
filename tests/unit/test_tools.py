@@ -34,12 +34,59 @@ def test_registry_rejects_duplicates():
 
 
 @pytest.mark.asyncio
-async def test_search_tool_mock_when_no_api_key(monkeypatch):
-    monkeypatch.delenv("SERPAPI_API_KEY", raising=False)
-    tool = SearchTool()
+async def test_search_tool_mock_provider():
+    tool = SearchTool(provider="mock")
     results = await tool(query="celery", num_results=3)
     assert len(results) == 3
     assert all("title" in r for r in results)
+
+
+def test_search_tool_parses_duckduckgo_results():
+    html = """
+    <html><body>
+      <div class="result">
+        <a class="result__a" href="https://docs.celeryq.dev/en/stable/">
+          Celery documentation
+        </a>
+        <a class="result__snippet">Distributed task queue docs.</a>
+      </div>
+      <div class="result">
+        <a class="result__a"
+           href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fgithub.com%2Fcelery%2Fcelery">
+          celery/celery
+        </a>
+        <a class="result__snippet">Distributed Task Queue.</a>
+      </div>
+    </body></html>
+    """
+    results = SearchTool._parse_duckduckgo_html(html, 5)
+    assert len(results) == 2
+    assert results[0]["url"] == "https://docs.celeryq.dev/en/stable/"
+    assert results[1]["url"] == "https://github.com/celery/celery"
+
+
+@pytest.mark.asyncio
+async def test_search_tool_duckduckgo_provider(monkeypatch):
+    tool = SearchTool(provider="duckduckgo")
+    calls = {}
+
+    async def fake_ddg(query: str, n: int):
+        calls["args"] = (query, n)
+        return [
+            {"title": "Result", "url": "https://example.org", "snippet": "ok"}
+        ]
+
+    monkeypatch.setattr(tool, "_duckduckgo_search", fake_ddg)
+    results = await tool(query="python", num_results=1)
+    assert calls["args"] == ("python", 1)
+    assert results[0]["url"] == "https://example.org"
+
+
+@pytest.mark.asyncio
+async def test_search_tool_rejects_empty_query():
+    tool = SearchTool(provider="mock")
+    with pytest.raises(ToolError):
+        await tool(query="   ")
 
 
 @pytest.mark.asyncio

@@ -15,6 +15,8 @@ from mares.evaluation.consistency_checker import ConsistencyChecker
 from mares.evaluation.evaluator_agent import EvaluatorAgent
 from mares.evaluation.hallucination_detector import HallucinationDetector
 from mares.llm.cost_controller import CostController
+from mares.memory.memory_store import MemoryStore
+from mares.memory.shared_memory import SharedMemory
 from mares.models.agent_output import AgentOutput
 from mares.models.final_report import FinalReport
 from mares.models.task import Task
@@ -51,9 +53,12 @@ class Orchestrator:
         dag_executor: DAGExecutor | None = None,
         cost_controller: CostController | None = None,
         event_bus: EventBus | None = None,
+        shared_memory: SharedMemory | None = None,
         repository: Any = None,
-        max_retries: int = 3,
+        max_retries: int | None = None,
     ) -> None:
+        if max_retries is None:
+            max_retries = int(os.getenv("MAX_RETRIES", "3"))
         cost_controller = cost_controller or CostController.from_env()
         cc_kwargs: dict[str, Any] = {"cost_controller": cost_controller}
         self.planner = planner or PlannerAgent(**cc_kwargs)
@@ -66,13 +71,24 @@ class Orchestrator:
         self.hallucination_detector = HallucinationDetector()
         self.consistency_checker = ConsistencyChecker()
         self.event_bus = event_bus
-        self.dag_executor = dag_executor or DAGExecutor(self.research, self.execution)
+        self.shared_memory = shared_memory or self._init_shared_memory()
+        self.dag_executor = dag_executor or DAGExecutor(
+            self.research,
+            self.execution,
+            max_concurrency=int(os.getenv("MAX_CONCURRENT_TASKS", "5")),
+            shared_memory=self.shared_memory,
+        )
         self.self_correction = self_correction or SelfCorrectionLoop(
             self.dag_executor,
             self.critic,
             max_retries=max_retries,
         )
         self.repository = repository or self._init_repository()
+
+    @staticmethod
+    def _init_shared_memory() -> SharedMemory:
+        """Create shared memory, using Redis when ``MARES_MEMORY_BACKEND=redis``."""
+        return SharedMemory(memory_store=MemoryStore())
 
     @staticmethod
     def _init_repository() -> Any | None:
@@ -93,6 +109,7 @@ class Orchestrator:
 
         # 1) Plan
         plan: Task = await self.planner.run(user_task)
+        await self._remember("task.plan", plan.model_dump())
 
         # 1b) Validate the task graph
         validate_task_graph(plan.sub_tasks)
@@ -136,6 +153,7 @@ class Orchestrator:
         # 4) Synthesize
         report = await self.synthesizer.run(outputs)
         report.metadata["evaluation"] = eval_info
+        await self._remember("task.report", report.model_dump())
 
         # 5) Persist to database if repository is available
         if self.repository is not None:
@@ -153,6 +171,13 @@ class Orchestrator:
     async def _emit(self, event: str, **kwargs: Any) -> None:
         if self.event_bus is not None:
             await self.event_bus.emit(event, **kwargs)
+
+    async def _remember(self, key: str, value: Any) -> None:
+        """Best-effort write to shared memory (never fails a run)."""
+        try:
+            await self.shared_memory.set(key, value)
+        except Exception as exc:  # noqa: BLE001 - memory is best-effort
+            logger.warning("orchestrator.shared_memory_failed", key=key, error=str(exc))
 
     async def plan_only(self, user_task: str) -> Task:
         return await self.planner.run(user_task)

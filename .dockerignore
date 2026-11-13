@@ -1,0 +1,36 @@
+# Git / VCS
+.git
+.gitignore
+.github
+
+# Local secrets and config
+.env
+.env.*
+!.env.example
+
+# Caches and build artifacts
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Logs / runtime data
+logs/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+dump.rdb
+
+# Docs, notebooks, editor cruft
+docs/
+notebooks/
+.DS_Store
+.idea/
+.vscode/

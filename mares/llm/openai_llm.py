@@ -16,6 +16,7 @@ class OpenAILLM:
     def __init__(self, model: str = "gpt-4o-mini", api_key: str | None = None) -> None:
         self.model = model
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.base_url = os.getenv("OPENAI_BASE_URL") or os.getenv("OPENAI_API_BASE")
         self._client: Any | None = None
         if not self.api_key:
             logger.warning("openai_llm.missing_key")
@@ -28,7 +29,10 @@ class OpenAILLM:
                 raise RuntimeError(
                     "openai package not installed. Run `pip install openai`."
                 ) from exc
-            self._client = AsyncOpenAI(api_key=self.api_key)
+            client_kwargs: dict[str, Any] = {"api_key": self.api_key}
+            if self.base_url:
+                client_kwargs["base_url"] = self.base_url
+            self._client = AsyncOpenAI(**client_kwargs)
         return self._client
 
     async def generate(

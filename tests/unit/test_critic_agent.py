@@ -56,3 +56,22 @@ async def test_critic_handles_empty_input(mock_llm_factory):
     report = await agent.run([])
     assert report.passed is True
     mock_llm_factory.generate.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_critic_does_not_block_on_medium_issues(mock_llm_factory):
+    mock_llm_factory.generate.return_value = json.dumps(
+        {
+            "passed": False,
+            "issues": [
+                {"sub_task_id": 1, "severity": "medium", "description": "add nuance"}
+            ],
+            "summary": "minor issues",
+        }
+    )
+    agent = CriticAgent(llm_factory=mock_llm_factory)
+    report = await agent.run(
+        [AgentOutput(agent="research_agent", sub_task_id=1, content={})]
+    )
+    assert report.passed is True
+    assert report.issues

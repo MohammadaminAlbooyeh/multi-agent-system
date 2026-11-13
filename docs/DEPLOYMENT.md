@@ -11,14 +11,22 @@ uvicorn api.main:app --reload
 ## Docker
 
 ```bash
+cp .env.example .env   # fill in LLM keys at minimum
 docker compose up --build
 ```
 
 This starts three services:
 
-- `api` — the FastAPI app (port 8000).
+- `api` — the FastAPI app (port 8000). The image entrypoint runs
+  `alembic upgrade head` before starting Uvicorn, so the schema is created
+  automatically on first boot.
 - `postgres` — persistent state.
-- `redis` — shared memory + message queue.
+- `redis` — shared memory + message queue (enable with
+  `MARES_MEMORY_BACKEND=redis`).
+
+If ports `5432`/`6379` are already used on the host, run with a compose
+override that removes the Postgres/Redis host mappings — the API reaches
+them over the compose network regardless.
 
 ## Production checklist
 

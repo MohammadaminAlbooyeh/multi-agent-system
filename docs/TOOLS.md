@@ -12,6 +12,19 @@ Tools are async callables registered in `mares.tools.tool_registry.ToolRegistry`
 | `api_call` | `api_call_tool.py` | Research Agent |
 | (failure sim) | `tool_failure_simulator.py` | Testing |
 
+## Web search
+
+`SearchTool` performs real searches. Select a backend with `SEARCH_PROVIDER`:
+
+- `auto` (default) — SerpAPI if `SERPAPI_API_KEY` is set, then Brave if
+  `BRAVE_API_KEY` is set, otherwise keyless DuckDuckGo.
+- `serpapi`, `brave`, `duckduckgo` — force a specific backend.
+- `mock` — deterministic fixtures, intended only for tests.
+
+Results are normalised to `{"title", "url", "snippet"}`. A provider failure
+raises `ToolError`; the Research Agent catches it and continues without web
+context rather than failing the whole sub-task.
+
 ## Registering a custom tool
 
 ```python

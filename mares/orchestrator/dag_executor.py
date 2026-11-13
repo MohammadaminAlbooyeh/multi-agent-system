@@ -9,6 +9,7 @@ from mares.agents.research_agent import ResearchAgent
 from mares.graph.dag import DAG
 from mares.graph.dependency_resolver import DependencyResolver
 from mares.graph.task_node import TaskNode
+from mares.memory.shared_memory import SharedMemory
 from mares.models.agent_output import AgentOutput
 from mares.models.sub_task import SubTask
 from mares.models.task import Task
@@ -33,9 +34,11 @@ class DAGExecutor:
         research_agent: ResearchAgent,
         execution_agent: ExecutionAgent | None = None,
         max_concurrency: int = 5,
+        shared_memory: SharedMemory | None = None,
     ) -> None:
         self.research_agent = research_agent
         self.execution_agent = execution_agent
+        self.shared_memory = shared_memory
         self.runner = ParallelRunner(max_concurrency=max_concurrency)
 
     async def run(self, task: Task) -> list[AgentOutput]:
@@ -64,10 +67,20 @@ class DAGExecutor:
                 if out.sub_task_id in self._task_nodes:
                     node = self._task_nodes[out.sub_task_id]
                     node.mark_done(out)
+                await self._remember_output(out)
             all_outputs.extend(outputs)
 
         logger.info("dag_executor.done", outputs=len(all_outputs))
         return all_outputs
+
+    async def _remember_output(self, output: AgentOutput) -> None:
+        """Best-effort publication to shared memory (Redis or in-process)."""
+        if self.shared_memory is None:
+            return
+        try:
+            await self.shared_memory.store_output(output)
+        except Exception as exc:  # noqa: BLE001 - memory is best-effort
+            logger.warning("dag_executor.shared_memory_failed", error=str(exc))
 
     def _build_dag(self, sub_tasks: Iterable[SubTask]) -> DAG:
         dag: DAG = DAG()

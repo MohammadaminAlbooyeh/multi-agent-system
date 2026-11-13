@@ -7,12 +7,12 @@
 - 🤖 **5 specialized agents** (Planner, Research, Execution, Critic, Synthesizer)
 - 🔁 **DAG-based execution** with topological sort and parallel task scheduling
 - ⚡ **Async parallel execution** with `asyncio` for independent tasks
-- 🛠️ **Real tool use** (web search, Python sandbox, file I/O, HTTP APIs)
-- 🧠 **Two-tier memory** (per-agent + shared cross-agent memory)
+- 🛠️ **Real tool use** (keyless web search via DuckDuckGo, optional SerpAPI/Brave, Python sandbox, file I/O, HTTP APIs)
+- 🧠 **Two-tier memory** (per-agent + shared cross-agent memory, optional Redis backend)
 - 🔄 **Self-correction loop** with critic-driven retries
 - 🌐 **FastAPI** REST + WebSocket API
-- 🐳 **Docker** + docker-compose deployment
-- 🧪 **40+ test cases** (unit + integration)
+- 🐳 **Docker** + docker-compose deployment (runs Alembic migrations on start)
+- 🧪 **49 test cases** (unit + integration)
 - 📓 **10 Jupyter notebooks** for interactive learning
 
 ## 📁 Project Structure
@@ -53,7 +53,9 @@ pip install -r requirements.txt
 
 # Configure
 cp .env.example .env
-# Add: OPENAI_API_KEY, ANTHROPIC_API_KEY, etc.
+# Add your LLM key(s). Any OpenAI-compatible endpoint also works:
+#   OPENAI_BASE_URL=https://openrouter.ai/api/v1
+# Web search needs no key (DuckDuckGo); optionally set SERPAPI_API_KEY or BRAVE_API_KEY.
 
 # Run an example
 python -m examples.run_celery_analysis
@@ -61,6 +63,30 @@ python -m examples.run_celery_analysis
 # Or start the API server
 uvicorn api.main:app --reload
 ```
+
+### Web search providers
+
+`SearchTool` is real by default and selects a provider with `SEARCH_PROVIDER`
+(`auto` by default):
+
+| Provider | Key required | Notes |
+|----------|--------------|-------|
+| `duckduckgo` | No | Keyless fallback, used by `auto` when no other key is set |
+| `serpapi` | `SERPAPI_API_KEY` | Google organic results |
+| `brave` | `BRAVE_API_KEY` | Brave Web Search API |
+| `mock` | No | Deterministic fixtures for tests only |
+
+There is no silent mock fallback in production: failed searches raise
+`ToolError` (and the Research Agent degrades gracefully per sub-task).
+
+### Persistence & memory
+
+- `DATABASE_URL` enables PostgreSQL persistence for task runs and agent
+  outputs (including cost/evaluation metadata).
+- `MARES_MEMORY_BACKEND=redis` makes cross-agent shared memory use Redis;
+  `memory` (the default) keeps it in-process.
+- `docker compose up` applies `alembic upgrade head` automatically via the
+  container entrypoint.
 
 ## 🤖 Agents
 
