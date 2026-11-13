@@ -194,6 +194,133 @@ flowchart TD
     O --> P["📄 FINAL REPORT<br/>(Markdown + metadata)<br/>Summary · Findings · Code outputs<br/>Cost breakdown · Execution timeline"]
 ```
 
+<details>
+<summary>ASCII version (click to expand)</summary>
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             USER REQUEST INPUT                              │
+│                        (e.g., "Analyze Celery lib")                         │
+└────────────────────────────┬────────────────────────────────────────────────┘
+                             │
+                             ▼
+           ┌──────────────────────────────────┐
+           │        PLANNER AGENT (Async)     │
+           │  • Decompose task into sub-tasks │
+           │  • Validate task structure       │
+           │  • Build dependency DAG          │
+           └──────┬───────────────────────────┘
+                  │
+                  ▼
+       ┌──────────────────────────┐
+       │   DAG BUILDER (Acyclic)  │
+       │  ✓ Topological sort      │
+       │  ✓ Dependency resolution │
+       │  ✓ Parallel wave plan    │
+       └──────┬───────────────────┘
+              │
+              ├─────────────────────────────────────────┐
+              │     SHARED MEMORY & EVENT BUS           │
+              │  • Store task graph                      │
+              │  • Track execution state                 │
+              │  • Broadcast task events                 │
+              ├─────────────────────────────────────────┤
+              │     COST CONTROLLER (Token Budget)      │
+              │  • Track per-agent token usage          │
+              │  • Enforce global + per-agent budgets   │
+              │  • Estimate cost before execution       │
+              └──────┬──────────────────────────────────┘
+                     │
+                     ▼
+    ┌────────────────────────────────────────────┐
+    │    PARALLEL WAVE EXECUTION (Asyncio)       │
+    │  (Independent tasks run concurrently)      │
+    └──────────────────────┬─────────────────────┘
+                           │
+          ┌────────────────┼────────────────┐
+          │                │                │
+          ▼                ▼                ▼
+   ┌────────────┐  ┌────────────┐  ┌────────────┐
+   │ RESEARCH   │  │ EXECUTION  │  │  RESEARCH  │
+   │  AGENT     │  │   AGENT    │  │  AGENT     │
+   │            │  │            │  │            │
+   │ • Use tools│  │ • Run code │  │ • Use tools│
+   │ • Fetch    │  │ • Sandbox  │  │ • Fetch    │
+   │   APIs     │  │ • Timeout  │  │   data     │
+   │ • Research │  │ • Capture  │  │ • Parse    │
+   │ • Validate │  │   errors   │  │ • Extract  │
+   └─────┬──────┘  └─────┬──────┘  └─────┬──────┘
+         │                │                │
+         └────────────────┼────────────────┘
+                          │
+         ┌────────────────┴────────────────┐
+         │    SHARED MEMORY (Redis)        │
+         │  • Store intermediate results   │
+         │  • Cache findings               │
+         │  • Track execution history      │
+         └────────────────┬────────────────┘
+                          │
+                          ▼
+        ┌─────────────────────────────────┐
+        │   MEMORY PERSISTENCE (Postgres) │
+        │  • Store task outputs           │
+        │  • Log execution events         │
+        │  • Archive results              │
+        └────────────────┬────────────────┘
+                         │
+                         ▼
+        ┌────────────────────────────────────────┐
+        │    CRITIC AGENT (Async Validation)     │
+        │  • Hallucination detection             │
+        │  • Consistency checks                  │
+        │  • Output validation                   │
+        │  • Error classification                │
+        └──────┬─────────────────────────────────┘
+               │
+       ┌───────┴────────────┐
+       │                    │
+     PASS ✅            FAIL ❌
+       │                    │
+       │            ┌───────────────────────────────┐
+       │            │  SELF-CORRECTION LOOP         │
+       │            │  (Retry up to MAX_RETRIES)    │
+       │            │  • Re-run failed subtasks     │
+       │            │  • Adjust parameters          │
+       │            │  • Try alternate approaches   │
+       │            └───────────┬───────────────────┘
+       │                        │
+       │                        └──→ (back to RESEARCH/EXECUTION)
+       │
+       ▼
+   ┌────────────────────────────────────┐
+   │   SYNTHESIZER AGENT (Async)        │
+   │  • Aggregate all findings          │
+   │  • Format Markdown report          │
+   │  • Include citations + sources     │
+   │  • Generate summaries              │
+   └──────────┬───────────────────────┘
+              │
+              ▼
+  ┌────────────────────────────────┐
+  │  EVENT BUS (Final Event)       │
+  │  • Broadcast completion event  │
+  │  • WebSocket push to clients   │
+  └────────────┬───────────────────┘
+               │
+               ▼
+    ┌──────────────────────────┐
+    │   📄 FINAL REPORT        │
+    │  (Markdown + metadata)   │
+    │  • Summary               │
+    │  • Findings              │
+    │  • Code outputs          │
+    │  • Cost breakdown        │
+    │  • Execution timeline    │
+    └──────────────────────────┘
+```
+
+</details>
+
 ### Key Components in Flow:
 
 | Component | Purpose | Technology |
